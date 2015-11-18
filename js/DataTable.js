@@ -27,11 +27,12 @@ var DataTable = React.createClass({
 	// setting multiple filters. Also, the onFilter code changes the filter state in-place,
 	// which violates the react API contract wherein state is treated as immutable.
 	setFilters: function (obj) {
-		var {filterValues, sortBy} = this.state,
+		console.log(obj);
+        var {filterValues, sortBy} = this.state,
 			{initialData, filter, filters, sort} = this.props,
 			newFilterValues = merge(filterValues, obj),
 			data = sort(sortBy, filter(filters, newFilterValues, initialData));
-
+       
 		this.setState({
 		  data: data,
 		  filterValues: newFilterValues,
@@ -65,10 +66,25 @@ var DataTable = React.createClass({
 	toggleFilters: function () {
 		this.setState({filtersOpen: !this.state.filtersOpen});
 	},
+    //toggleSources: function (title) {
+    //    this.props.sourceSelection[title].selectVal = !this.props.sourceSelection[title].selectVal;
+    //    this.setFilters(this.selectSources());
+    //},
     toggleColumns: function (title) {
         this.props.columnSelection[title].selectVal = !this.props.columnSelection[title].selectVal;
         this.setState({renderColumns: this.selectColumns()});
     },
+    /*selectSources () {
+     *   var sourceObject = this.props.origionalSources;
+     *   var newSourceList = [];
+     *   for (var i = 0; i < sourceObject.length; i++) {
+     *       var name = sourceObject[i].name;
+     *       if (this.props.sourceSelection[name].selectVal === true) {
+     *           newSourceList.push(name);
+     *       }
+     *   }
+     *   return {Source: newSourceList};
+    */ },
     selectColumns () {
         var columnObject = this.props.origionalColumns;
         var newColObject = [];
@@ -86,15 +102,19 @@ var DataTable = React.createClass({
     },
 	render: function () {
 		var {filtersOpen, filterValues, search} = this.state,
-			{subColumns, columnSelection, filterColumns, suggestions, className} = this.props,
+			{subColumns, columnSelection, sourceSelection, filterColumns, filterSources, suggestions, className} = this.props,
 			page = this.buildPage(),
 			filterFormEls = _.map(filterColumns, ({name, prop, values}) =>
 				<SelectField onChange={v => this.setFilters({[prop]: filterAny(v)})}
 					key={prop} label={`${name} is: `} value={filterDisplay(filterValues[prop])} options={addAny(values)}/>),
+			//filterFormSources = _.map(filterSources, ({name, prop}) =>
+            //    <ColumnCheckbox onChange={v => this.toggleSources(name)} key={name} label={name} title={name} initialCheck={sourceSelection}/>),
 			filterFormSubCols = _.map(subColumns, ({subColTitle, subColList}) =>
-                <Panel header={subColTitle}>
-                    {this.filterFormCols(subColList, columnSelection)}
-                </Panel>
+               <Col sm={6} md={2}> 
+                    <Panel header={subColTitle}>
+                        {this.filterFormCols(subColList, columnSelection)}
+                    </Panel>
+               </Col>
             );
 		return (
 			<div className={this.props.className}>
@@ -102,13 +122,24 @@ var DataTable = React.createClass({
 					<Col sm={12}>
 						<Button bsSize='xsmall' onClick={this.toggleFilters}>{(filtersOpen ? 'Hide' : 'Show' ) + ' Filters'}</Button>
 						{filtersOpen && <div className='form-inline'>{filterFormEls}</div>}
+						{filtersOpen && <div className='form-inline'>
+                            <label className='control-label' style={{marginRight: '1em'}}>
+                                <Row sm={12}>
+                                    <Panel header="Source Selection">
+                                        {filterFormSources}
+                                    </Panel>
+                                </Row>
+                            </label>
+                        </div>}
                         {filtersOpen && <div className='form-inline'>
-                                            <label className='control-label' style={{marginRight: '1em'}}>
-                                                <Panel header="Column Selection">
-                                                    {filterFormSubCols}
-                                                </Panel>
-                                            </label>
-                                        </div>}
+                            <label className='control-label' style={{marginRight: '1em'}}>
+                                <Row sm={12}>
+                                    <Panel header="Column Selection">
+                                        {filterFormSubCols}
+                                    </Panel>
+                                </Row>
+                            </label>
+                        </div>}
 					</Col>
 				</Row>
 				<Row style={{marginBottom: '2px'}}>
