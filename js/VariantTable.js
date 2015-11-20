@@ -45,25 +45,6 @@ var filterColumns = [
 	{name: 'Pathogenicity', prop: 'Clinical_significance', values: ['Pathogenic', 'Benign']}
 ];
 
-var filterSources = [
-	{name: 'ENIGMA', prop: 'Source'},
-    //{name: 'One000_Genomes', prop: 'Source'},
-	{name: 'ClinVar', prop: 'Source'},
-	{name: 'LOVD', prop: 'Source'},
-	{name: 'ExAC', prop: 'Source'},
-	{name: 'exLOVD', prop: 'Source'},
-	{name: 'BIC', prop: 'Source'}
-];
-
-var sourceSelection = {
-    ENIGMA: {selectVal: true},
-    //One000_Genomes: {selectVal: true},
-    ClinVar: {selectVal: true},
-    LOVD: {selectVal: true},
-    ExAC: {selectVal: true},
-    exLOVD: {selectVal: true},
-    BIC: {selectVal: true}
-};
 // This callback is used to apply all active filters. We override the
 // one in react-data-components.utils, which performs a union of all
 // matches, with this one which does an intersection.
@@ -291,12 +272,9 @@ var VariantTable = React.createClass({
 				filter={applyFilters}
 				filters={filters(columns)}
 				filterColumns={filterColumns}
-				//filterSources={filterSources}
-                //origionalSources={filterSources}
                 origionalColumns={columns}
                 subColumns={subColumns}
                 columnSelection={columnSelection}
-				//sourceSelection={sourceSelection}
                 initialData={data}
 				initialPageLength={20}
                 initialSortBy={{prop: 'Abbrev_AA_change', order: 'descending'}}
