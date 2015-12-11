@@ -40,7 +40,19 @@ var {Navigation, State, Link, Route, RouteHandler,
 
 var navbarHeight = 70; // XXX This value MUST match the setting in custom.css
 
-var D3LollipopSVG = require('./D3LollipopSVG');
+//var D3LollipopSVG = require('./D3LollipopSVG');
+var d3Lollipop = require('./d3Lollipop');
+var brca12JSON = {
+    BRCA1: {
+        brcaMutsFile: require('raw!../content/brca1LollipopMuts.json'),
+        brcaDomainFile: require('raw!../content/brca1LollipopDomain.json')
+    },
+    BRCA2: {
+        brcaMutsFile: require('raw!../content/brca2LollipopMuts.json'),
+        brcaDomainFile: require('raw!../content/brca2LollipopDomain.json')
+    }
+};
+
 
 var variantPathJoin = row => _.map(databaseKey, k => encodeURIComponent(row[k])).join('@@');
 var variantPathSplit = id => _.object(databaseKey, _.map(id.split(/@@/), decodeURIComponent));
@@ -310,7 +322,7 @@ var Database = React.createClass({
 	render: function () {
 		var {show, data, suggestions} = this.props,
 			{search = ''} = this.getQuery();
-		return (
+        return (
 			<Grid style={{display: show ? 'block' : 'none'}}>
 				{data ?
 					<VariantTable
@@ -339,7 +351,7 @@ var MyVariant = React.createClass({ //eslint-disable-line no-unused-vars
 	render: function() {
 		var {data} = this.state;
 		var {show} = this.props;
-		return (
+        return (
 			<div style={{display: show ? 'block' : 'none'}}>
 				<div className="text-center">
 					<Input ref='file' type='file' onChange={this.fileChange}/>
@@ -480,12 +492,32 @@ var Application = React.createClass({
 	}
 });
 
+/*
 var D3StaticLollipop = React.createClass({
     render: function () {
         return (
             <D3LollipopSVG brcakey={this.props.brcakey}/>
         );
     }
+});
+*/
+
+var D3Lollipop = React.createClass({
+    render: function () {
+        return (
+            <div id='brcaLollipop' ref='d3svgBrca'/>
+        );
+    },
+    componentDidMount: function() {
+        var d3svgBrcaRef = React.findDOMNode(this.refs.d3svgBrca);
+        var mutsBRCA = JSON.parse(brca12JSON[this.props.brcakey].brcaMutsFile);
+        var domainBRCA = JSON.parse(brca12JSON[this.props.brcakey].brcaDomainFile);
+        this.cleanupBRCA = d3Lollipop.drawStuffWithD3(d3svgBrcaRef, mutsBRCA, domainBRCA, this.props.brcakey);
+    },
+    componentWillUnmount: function() {
+        this.cleanupBRCA();
+    },
+    shouldComponentUpdate: () => false
 });
 
 var Lollipop = React.createClass({
@@ -514,7 +546,7 @@ var Lollipop = React.createClass({
                     </DropdownButton>
                     <span onClick={() => this.showHelp('Lollipop Plots')}
                         className='help glyphicon glyphicon-question-sign superscript'/>
-                    <D3StaticLollipop key={this.state.brcakey} brcakey={this.state.brcakey} id='brcaLollipop' ref='d3svgBrca'/>
+                    <D3Lollipop key={this.state.brcakey} brcakey={this.state.brcakey} id='brcaLollipop' ref='d3svgBrca'/>
                 </div>
             </Grid>
         );

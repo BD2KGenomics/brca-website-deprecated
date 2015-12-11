@@ -1,3 +1,5 @@
+/*eslint camelcase: [0] */
+/*global require: false, module: false */
 // A table for variants.
 //
 // The intent here was to split the generic table code
@@ -15,7 +17,8 @@ var PureRenderMixin = require('./PureRenderMixin');
 var DataTable = require('./DataTable');
 require('react-data-components-bd2k/css/table-twbs.css');
 var _ = require('underscore');
-var {utils} = require('react-data-components-bd2k');
+var {utils, DataMixin} = require('react-data-components-bd2k');
+var {Grid, Col, Row} = require('react-bootstrap');
 
 function buildHeader(onClick, title) {
 	return (
@@ -27,6 +30,7 @@ function buildHeader(onClick, title) {
 	);
 }
 
+/*
 function renderClinVarLink(val) {
 	return (
 		<a title="View on ClinVar"
@@ -34,6 +38,7 @@ function renderClinVarLink(val) {
 			href={"http://www.ncbi.nlm.nih.gov/clinvar/?term=" + val}>{val}</a>
 	);
 }
+*/
 
 function renderCell(val) {
 	return <span>{val}</span>;
@@ -261,13 +266,14 @@ var VariantTable = React.createClass({
 	},
 	render: function () {
 		var {data, onHeaderClick, onRowClick, ...opts} = this.props;
-		return (
-			<DataTable
+        return (
+            <DataTable
 				ref='table'
 				className='row-clickable'
 				{...opts}
 				buildRowOptions={r => ({title: 'click for details', onClick: () => hasSelection() ? null : onRowClick(r)})}
-				buildHeader={title => buildHeader(onHeaderClick, title)}
+				onHeaderClick={onHeaderClick}
+                buildHeader={title => buildHeader(onHeaderClick, title)}
 				sort={(sb, d) => sortColumns(columns, sb, d)}
 				filter={applyFilters}
 				filters={filters(columns)}

@@ -3,7 +3,7 @@
 
 var React = require('react');
 var {Table, Pagination, DataMixin} = require('react-data-components-bd2k');
-var {Button, Row, Col, Panel, DropdownButton, MenuItem, Grid} = require('react-bootstrap');
+var {Button, Row, Col, Panel, DropdownButton, MenuItem} = require('react-bootstrap');
 var VariantSearch = require('./VariantSearch');
 var SelectField = require('./SelectField');
 var ColumnCheckbox = require('./ColumnCheckbox');
@@ -39,101 +39,16 @@ var D3Lollipop = React.createClass({
             <div id='brcaLollipop' ref='d3svgBrca'/>
         );
     },
-    filterData : function (obj) {
-        if (obj.Gene_symbol === this.props.brcakey && 'Genomic_Coordinate' in obj && 'Clinical_significance' in obj) {
-            return true;
-        } else {
-            return false;
-        }
-    },
-    filterAttributes : function (obj) {
-        var oldObj = _(obj).pick('Genomic_Coordinate', 'Clinical_significance');
-        
-        var chrCoordinate = parseInt(oldObj.Genomic_Coordinate.split(':')[1]);
-        var refAllele = oldObj.Genomic_Coordinate.split(':')[2].split('>')[0];
-        var altAllele = oldObj.Genomic_Coordinate.split(':')[2].split('>')[1];
-        if (altAllele.length > refAllele.length) {
-            chrCoordinate = String(chrCoordinate) + '-' + String(chrCoordinate+altAllele.length-1);
-        } else {
-            chrCoordinate = String(chrCoordinate);
-        }
-        var newObj = {category: oldObj.Clinical_significance, coord: chrCoordinate, value: 1};
-        return newObj;
-    },
     componentDidMount: function() {
-        var {data, brcakey, ...opts} = this.props;
-        console.log(brcakey);
-        console.log(this.props);
-        var filteredData = data.filter(this.filterData);
-        var subSetData = filteredData.map(this.filterAttributes);
-        console.log('subsetData length:');
-        console.log(subSetData.length);
-        
         var d3svgBrcaRef = React.findDOMNode(this.refs.d3svgBrca);
-        var mutsBRCA = JSON.parse(brca12JSON[brcakey].brcaMutsFile);
-        var domainBRCA = JSON.parse(brca12JSON[brcakey].brcaDomainFile);
-        this.cleanupBRCA = d3Lollipop.drawStuffWithD3(d3svgBrcaRef, subSetData, domainBRCA, brcakey);
-    },
-    componentWillRecieveProps: function(newProps) {
-        console.log('state change d3lollipop');
-        this.setState({data: newProps.data});
-    },
-    componentWillUpdate: function() {
-        console.log('Refreshing lollipop DOM element...');
-        console.log(this);
-        this.cleanupBRCA();
-        var {data, brcakey, ...opts} = this.props;
-        console.log('Updating the d3Lollipop plot...');
-        var filteredData = data.filter(this.filterData);
-        var subSetData = filteredData.map(this.filterAttributes);
-        var d3svgBrcaRef = React.findDOMNode(this.refs.d3svgBrca);
-        var mutsBRCA = JSON.parse(brca12JSON[brcakey].brcaMutsFile);
-        var domainBRCA = JSON.parse(brca12JSON[brcakey].brcaDomainFile);
-        console.log('before rerender');
-        console.log(subSetData);
-        this.cleanupBRCA = d3Lollipop.drawStuffWithD3(d3svgBrcaRef, subSetData, domainBRCA, brcakey);
+        var mutsBRCA = JSON.parse(brca12JSON[this.props.brcakey].brcaMutsFile);
+        var domainBRCA = JSON.parse(brca12JSON[this.props.brcakey].brcaDomainFile);
+        this.cleanupBRCA = d3Lollipop.drawStuffWithD3(d3svgBrcaRef, mutsBRCA, domainBRCA, this.props.brcakey);
     },
     componentWillUnmount: function() {
         this.cleanupBRCA();
     },
-    shouldComponentUpdate: () => true
-});
-
-var Lollipop = React.createClass({
-    getInitialState: function() {
-        return {brcakey: "BRCA1", data: this.props.data};
-    },
-    onSelect: function(key) {
-        this.setState({brcakey: key});
-    },
-    componentWillReceiveProps: function(newProps) {
-        console.log('state change lollipop');
-        this.setState({data: newProps.data});
-    },
-    render: function () {
-        var {data, onHeaderClick, ...opts} = this.props;
-        console.log('data seen by lollipop chart:');
-        console.log(this.state.brcakey);
-        console.log(this.state.data.length);
-        return (
-            <Grid>
-                <Row>
-                    <Col md={8} mdOffset={4}>
-                        <h1 id="brca-dna-variant-lollipop">{this.state.brcakey} Lollipop Chart</h1>
-                    </Col>
-                </Row>
-                <div>
-                    <DropdownButton onSelect={this.onSelect} title="Select Gene" id="bg-vertical-dropdown-1">
-                        <MenuItem eventKey="BRCA1">BRCA1</MenuItem>
-                        <MenuItem eventKey="BRCA2">BRCA2</MenuItem>
-                    </DropdownButton>
-                    <span onClick={() => onHeaderClick('Lollipop Plots')}
-                        className='help glyphicon glyphicon-question-sign superscript'/>
-                    <D3Lollipop data={this.state.data} key={this.state.brcakey} brcakey={this.state.brcakey} id='brcaLollipop' ref='d3svgBrca'/>
-                </div>
-            </Grid>
-        );
-    }
+    shouldComponentUpdate: () => false
 });
 
 var DataTable = React.createClass({
@@ -175,9 +90,15 @@ var DataTable = React.createClass({
 			tsv = keys.join('\t') + '\n' + tsvRows;
 		ev.target.href = URL.createObjectURL(new Blob([tsv], { type: 'text/tsv' }));
 	},
+    showHelp: function (title) {
+        this.transitionTo(`/help#${slugify(title)}`);
+    },
 	getInitialState: function () {
-		return {filtersOpen: false, search: this.props.search, renderColumns: this.selectColumns()};
+		return {filtersOpen: false, search: this.props.search, renderColumns: this.selectColumns(), brcakey: "BRCA1"};
 	},
+    onSelect: function(key) {
+        this.setState({brcakey: key});
+    },
 	toggleFilters: function () {
 		this.setState({filtersOpen: !this.state.filtersOpen});
 	},
@@ -214,14 +135,24 @@ var DataTable = React.createClass({
                     </Panel>
                </Col>
             );
-        console.log('data seen by variant table:');
-        console.log(this.state.data.length);
-        console.log(this);
-        return (
+		return (
 			<div className={this.props.className}>
 				<Row style={{marginBottom: '2px'}}>
 					<Col sm={12}>
-                        <Lollipop data={this.state.data} onHeaderClick={this.props.onHeaderClick}/>
+                        <Row>
+                            <Col md={8} mdOffset={4}>
+                                <h1 id="brca-dna-variant-lollipop">{this.state.brcakey} Lollipop Chart</h1>
+                            </Col>
+                        </Row>
+                        <div>
+                            <DropdownButton onSelect={this.onSelect} title="Select Gene" id="bg-vertical-dropdown-1">
+                                <MenuItem eventKey="BRCA1">BRCA1</MenuItem>
+                                <MenuItem eventKey="BRCA2">BRCA2</MenuItem>
+                            </DropdownButton>
+                            <span onClick={() => this.showHelp('Lollipop Plots')}
+                                className='help glyphicon glyphicon-question-sign superscript'/>
+                            <D3Lollipop key={this.state.brcakey} brcakey={this.state.brcakey} id='brcaLollipop' ref='d3svgBrca'/>
+                        </div>
 						<Button bsSize='xsmall' onClick={this.toggleFilters}>{(filtersOpen ? 'Hide' : 'Show' ) + ' Filters'}</Button>
 						{filtersOpen && <div className='form-inline'>{filterFormEls}</div>}
                         {filtersOpen && <div className='form-inline'>
