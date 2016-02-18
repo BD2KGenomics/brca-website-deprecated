@@ -9,7 +9,7 @@ var qs = require('qs');
 // XXX Need a config mechanism for this. For now, uncomment the localhost
 // setting when working locally.
 var databaseUrl = "http://brcaexchange.cloudapp.net/backend";
-//databaseUrl = "http://localhost:8000";
+//var databaseUrl = "http://localhost:8000";
 
 var transpose = a => _.zip.apply(_, a);
 
@@ -19,12 +19,12 @@ function url(opts) {
 	var {
 		format = 'json',
 		filterValues = {},
-		source = '',
 		sortBy: {prop = 'Gene_symbol', order = 'ascending'} = {},
 		pageLength = 100,
 		page = 0,
 		search = '',
-		searchColumn = ['Variant_Source', 'Gene_symbol']} = opts,
+		source
+		} = opts,
 
 		[filter, filterValue] = transpose(_.pairs(_.pick(filterValues, v => v)));
 
@@ -32,13 +32,12 @@ function url(opts) {
 		format,
 		filter,
 		filterValue,
-		source,
 		'order_by': prop,
 		direction: order,
 		'page_size': pageLength,
 		'page_num': page,
 		'search_term': search,
-		'search_column': searchColumn
+		'source': source
 	}, v => v != null), {arrayFormat: 'repeat'})}`;
 }
 
